@@ -1,0 +1,49 @@
+#!/bin/sh
+
+case "$1" in
+    start)
+        echo "Loading LDD kernel modules..."
+
+        modprobe scull || exit 1
+        modprobe faulty || exit 1
+        modprobe hello || exit 1
+
+        # Create scull device nodes
+        major=$(awk '$2 == "scull" {print $1}' /proc/devices)
+
+        if [ -n "$major" ]; then
+            i=0
+            while [ "$i" -lt 4 ]; do
+                [ -e "/dev/scull$i" ] || mknod "/dev/scull$i" c "$major" "$i"
+                i=$((i + 1))
+            done
+        fi
+
+        # Create faulty device node
+        major=$(awk '$2 == "faulty" {print $1}' /proc/devices)
+
+        if [ -n "$major" ]; then
+            [ -e /dev/faulty ] || mknod /dev/faulty c "$major" 0
+        fi
+        ;;
+
+    stop)
+        echo "Unloading LDD kernel modules..."
+
+        rmmod hello
+        rmmod faulty
+        rmmod scull
+        ;;
+
+    restart)
+        "$0" stop
+        "$0" start
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0
