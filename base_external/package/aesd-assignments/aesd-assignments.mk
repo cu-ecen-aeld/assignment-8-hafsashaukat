@@ -4,12 +4,16 @@
 #
 ##############################################################
 
-AESD_ASSIGNMENTS_VERSION = f86b74b8fa0d4133b13da5ef12e2a4f49231bdfc
+AESD_ASSIGNMENTS_VERSION = 2fbdc037b6be6f805c1a9599a1a128eeba7729e1
 
 # Use SSH repository URL for automated build/test system
 AESD_ASSIGNMENTS_SITE = git@github.com:cu-ecen-aeld/assignment-3-hafsashaukat.git
 AESD_ASSIGNMENTS_SITE_METHOD = git
 AESD_ASSIGNMENTS_GIT_SUBMODULES = YES
+
+# build the AESD character driver against the target linux kernel
+AESD_ASSIGNMENTS_MODULE_SUBDIRS = aesd-char-driver
+AESD_ASSIGNMENTS_DEPENDENCIES = linux
 
 define AESD_ASSIGNMENTS_BUILD_CMDS
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D)/finder-app all
@@ -28,6 +32,10 @@ define AESD_ASSIGNMENTS_INSTALL_TARGET_CMDS
 
 	$(INSTALL) -m 0755 $(@D)/server/aesdsocket $(TARGET_DIR)/usr/bin/aesdsocket
 	$(INSTALL) -D -m 0755 $(@D)/server/aesdsocket-start-stop $(TARGET_DIR)/etc/init.d/S99aesdsocket
+
+	# install the character driver startup script
+	$(INSTALL) -D -m 0755 $(BR2_EXTERNAL_project_base_PATH)/package/aesd-assignments/S98aesdchar $(TARGET_DIR)/etc/init.d/S98aesdchar
 endef
 
+$(eval $(kernel-module))
 $(eval $(generic-package))
